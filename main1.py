@@ -1,10 +1,22 @@
-from ultralytics import YOLO
 from PIL import Image
 import streamlit as st
 import os
+import numpy as np
+from ultralytics import YOLO
+
+from ultralytics import YOLO
+model = YOLO("epoch-11.pt")
+print("YOLO model loaded successfully!")
+
+
 
 # Load the YOLO model
-model = YOLO("epoch-11.pt")
+MODEL_PATH = "epoch-11.pt"
+try:
+    model = YOLO(MODEL_PATH)
+except Exception as e:
+    st.error(f"❌ Failed to load the model: {e}")
+    st.stop()
 
 # Streamlit App Title and Description
 st.set_page_config(page_title="Brain Tumor Detection", page_icon="🧠", layout="centered")
@@ -28,11 +40,14 @@ if uploaded_file is not None:
         try:
             # Open and display the uploaded image
             image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_container_width=True, channels="RGB")
+            st.image(image, caption="Uploaded Image", use_container_width=True)
+
+            # Convert image to a format YOLO can process
+            image_array = np.array(image)
 
             # Run the model prediction
             st.markdown("### 🔍 Detection in Progress...")
-            results = model.predict(source=image)
+            results = model.predict(source=image_array)
 
             # Display the detection results
             st.image(results[0].plot(), caption="Detection Results", use_container_width=True)
@@ -44,19 +59,24 @@ if uploaded_file is not None:
         st.markdown("### 🎥 Uploaded Video Preview")
         try:
             # Save and display the uploaded video
-            with open("uploaded_video.mp4", "wb") as f:
+            temp_video_path = "uploaded_video.mp4"
+            with open(temp_video_path, "wb") as f:
                 f.write(uploaded_file.read())
-            st.video("uploaded_video.mp4", format="video/mp4")
+            st.video(temp_video_path, format="video/mp4")
 
             # Run the model prediction
             st.markdown("### 🔍 Detection in Progress...")
-            results = model.predict(source="uploaded_video.mp4")
+            results = model.predict(source=temp_video_path)
 
-            # Display the results (if applicable for video processing)
+            # Notify user of completion
             st.markdown("### ✅ Detection Completed!")
             st.success("The video has been successfully analyzed. Check the output.")
         except Exception as e:
             st.error(f"❌ Error processing video: {e}")
+        finally:
+            # Clean up temporary video file
+            if os.path.exists(temp_video_path):
+                os.remove(temp_video_path)
 
     # Unsupported File Formats
     else:
