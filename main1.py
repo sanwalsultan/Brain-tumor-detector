@@ -4,11 +4,6 @@ import os
 import numpy as np
 from ultralytics import YOLO
 
-from ultralytics import YOLO
-model = YOLO("epoch-11.pt")
-print("YOLO model loaded successfully!")
-
-
 
 # Load the YOLO model
 MODEL_PATH = "epoch-11.pt"
